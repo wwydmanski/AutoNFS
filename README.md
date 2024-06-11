@@ -18,7 +18,7 @@ X = breast.data
 y = breast.target
 
 gfs = GFSNetwork()
-gfs.fit(X, y)
+X = gfs.fit_transform(X, y)
 
 print(gfs.support_)
 print(gfs.scores_)

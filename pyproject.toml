@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "gfs_network"
+version = "0.1.2"
+description = ""
+authors = ["Witold Wydmański <wwydmanski@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+torch = "^2.1"
+tqdm = "^4.65"
+
+[tool.poetry.group.test.dependencies]
+pytest = "^6.2"
+sklearn = "^0.24"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

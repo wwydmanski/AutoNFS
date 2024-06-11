@@ -35,7 +35,7 @@ class GFSNetwork:
 
         # assert that y is one-hot encoded
         if len(y.shape) == 1:
-            y = torch.nn.functional.one_hot(y)
+            y = torch.nn.functional.one_hot(y.to(int))
 
         self.scores_ = select_gumbel_features(
             X,

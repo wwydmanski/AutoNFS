@@ -56,5 +56,5 @@ clf.fit(X_transformed, y_train)
 y_pred = clf.predict(X_test_transformed)
 score = balanced_accuracy_score(y_test, y_pred)
 logger.info(f"Score after feature selection: {score}. Selected features: {sum(gfs.support_)}")
-# Score after feature selection: 0.97. Selected features: 9
+# Score after feature selection: 0.958. Selected features: 3
 ```

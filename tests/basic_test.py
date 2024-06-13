@@ -10,16 +10,6 @@ basicConfig(level=INFO)
 logger = getLogger(__name__)
 DEVICE = "cpu"
 
-def test_iris():
-    iris = load_iris()
-    X = iris.data
-    y = iris.target
-
-    gfs = GFSNetwork(verbose=True, device=DEVICE)
-    gfs.fit(X, y)
-    print(gfs.support_)
-
-
 def test_breast_cancer():
     breast = load_breast_cancer()
     X = breast.data
@@ -48,8 +38,5 @@ def test_breast_cancer():
     
 
 if __name__ == "__main__":
-    logger.info("Iris Dataset")
-    test_iris()
-
     logger.info("Breast Cancer Dataset")
     test_breast_cancer()

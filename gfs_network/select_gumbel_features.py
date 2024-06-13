@@ -14,7 +14,7 @@ def select_gumbel_features(X_train, y_train, device="cpu", verbose=False, temper
 
     criterion = nn.CrossEntropyLoss(weight=balance.to(torch.float32).to(device))
     optimizer = optim.Adam([
-        {"params": network.fc1.parameters(), "lr": 3e-4},
+        {"params": network.fc1.parameters(), "lr": 3e-3},
         {"params": network.cont.parameters(), "lr": 3e-4},
     ])
     temperature = 2.0
@@ -29,7 +29,7 @@ def select_gumbel_features(X_train, y_train, device="cpu", verbose=False, temper
 
             optimizer.zero_grad()
             output, selected_no = network(X_.float(), temperature=temperature)
-            loss = criterion(output, y_.argmax(axis=1)) + selected_no*0.1
+            loss = criterion(output, y_.argmax(axis=1)) + selected_no
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()
@@ -39,7 +39,7 @@ def select_gumbel_features(X_train, y_train, device="cpu", verbose=False, temper
             total += y_.size(0)
             correct += (predicted == real).sum().item()
             
-            if epoch > (epochs*2//3):
+            if epoch > epochs:
                 temperature = 0
                 network.fc1.requires_grad_(False)
                 network.emb.requires_grad_(False)

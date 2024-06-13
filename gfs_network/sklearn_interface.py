@@ -9,7 +9,7 @@ class GFSNetwork:
         device: str = "cpu",
         verbose: bool = False,
         temperature_decay: float = 0.9999,
-        epochs: int = 300,
+        epochs: int = 200,
     ) -> None:
         """Perform feature selection using GFSNetwork.
 

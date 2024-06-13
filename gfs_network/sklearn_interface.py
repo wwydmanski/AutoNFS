@@ -26,8 +26,9 @@ class GFSNetwork:
         self.verbose = verbose
         self.temperature_decay = temperature_decay
         self.epochs = epochs
+        self.network = None
 
-    def fit(self, X, y):
+    def fit(self, X, y, scale=True):
         # cast to torch
         if type(X) != torch.Tensor:
             X = torch.tensor(X)
@@ -37,7 +38,11 @@ class GFSNetwork:
         if len(y.shape) == 1:
             y = torch.nn.functional.one_hot(y.to(int))
 
-        self.scores_ = select_gumbel_features(
+        if scale:
+            # perform whitening
+            X = (X - X.mean(0)) / (X.std(0) + 1e-6)
+
+        self.scores_, self.network = select_gumbel_features(
             X,
             y,
             self.device,
@@ -51,8 +56,7 @@ class GFSNetwork:
     @property
     def support_(self):
         assert self.scores_ is not None, "You must call fit before accessing support_"
-        perc_score = self.scores_ / self.scores_.max()
-        return self.scores_ > perc_score
+        return self.scores_ > 0
 
     def transform(self, X):
         assert self.support_ is not None, "You must call fit before transform"

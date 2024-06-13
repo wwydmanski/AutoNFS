@@ -20,7 +20,8 @@ def gumbel_sigmoid(logits, tau: float = 1, hard: bool = False, threshold: float 
 class FeatureSelectionNetwork(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, architecture=None):
         super(FeatureSelectionNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, input_size)
+        self.emb = nn.Parameter(torch.randn(1, 32))
+        self.fc1 = nn.Linear(32, input_size)
         self.fc1.weight.data.zero_()
 
         if architecture is not None:
@@ -35,7 +36,7 @@ class FeatureSelectionNetwork(nn.Module):
             )
 
     def forward(self, orig, temperature=1):
-        x = self.fc1(orig)
+        x = self.fc1(self.emb)
         mask = gumbel_sigmoid(x, tau=temperature, hard=temperature == 0)
         
         x = orig * mask

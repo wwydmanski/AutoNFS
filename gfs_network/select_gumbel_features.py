@@ -29,7 +29,7 @@ def select_gumbel_features(X_train, y_train, device="cpu", verbose=False, temper
 
             optimizer.zero_grad()
             output, selected_no = network(X_.float(), temperature=temperature)
-            loss = criterion(output, y_.argmax(axis=1)) + selected_no
+            loss = criterion(output, y_.argmax(axis=1)) + selected_no*0.1
             loss.backward()
             optimizer.step()
             epoch_loss += loss.item()

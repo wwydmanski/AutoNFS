@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gfs_network"
-version = "0.1.6"
+version = "0.2.0"
 description = ""
 authors = ["Witold Wydmański <wwydmanski@gmail.com>"]
 readme = "README.md"

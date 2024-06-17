@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gfs_network"
-version = "0.2.3"
+version = "0.2.7"
 description = "An end-to-end feature selection distribution with linear runtime(number of features) complexity."
 authors = ["Witold Wydmański <wwydmanski@gmail.com>"]
 readme = "README.md"
@@ -9,7 +9,7 @@ repository = "https://github.com/wwydmanski/GFSNetwork"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-torch = "^2.1"
+torch = "^2.0"
 tqdm = "^4.65"
 
 [tool.poetry.group.test.dependencies]

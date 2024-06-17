@@ -5,12 +5,12 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 import tqdm
 
-def select_gumbel_features(X_train, y_train, device="cpu", verbose=False, temperature_decay=0.995, epochs=300):
+def select_gumbel_features(X_train, y_train, device="cpu", verbose=False, temperature_decay=0.995, epochs=300, batch_size=1):
     balance = (y_train.sum(axis=0) / len(y_train)).flip(0)
 
     network = FeatureSelectionNetwork(X_train.shape[1], 32, len(balance)).to(device)
 
-    trainloader = DataLoader(list(zip(X_train, y_train)), batch_size=8)
+    trainloader = DataLoader(list(zip(X_train, y_train)), batch_size=batch_size)
 
     criterion = nn.CrossEntropyLoss(weight=balance.to(torch.float32).to(device))
     optimizer = optim.Adam([

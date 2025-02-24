@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gfs_network"
-version = "0.2.7"
+version = "0.3.0"
 description = "An end-to-end feature selection distribution with linear runtime(number of features) complexity."
 authors = ["Witold Wydmański <wwydmanski@gmail.com>"]
 readme = "README.md"

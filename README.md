@@ -1,4 +1,6 @@
 # GFS Network
+Code for [GFSNetwork: Differentiable Feature Selection via Gumbel-Sigmoid Relaxation](https://arxiv.org/abs/2503.13304).
+
 Gumbel Feature Selection Network is a deep learning model that can be used to select the most important features from a given dataset. The model is based on the Gumbel-Sigmoid distribution.
 
 ## Installation

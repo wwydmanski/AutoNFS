@@ -1,5 +1,5 @@
 from sklearn.datasets import load_iris, load_breast_cancer
-from gfs_network import GFSNetwork
+from autonfs import AutoNFS
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import balanced_accuracy_score
@@ -23,7 +23,7 @@ def test_breast_cancer():
     orig_score = balanced_accuracy_score(y_test, y_pred)
     logger.info(f"Original score: {orig_score:.3f}. Original features: {X.shape[1]}")
 
-    gfs = GFSNetwork(verbose=True, device=DEVICE)
+    gfs = AutoNFS(verbose=True, device=DEVICE)
     gfs.fit(X_train, y_train)
     
     X_transformed = gfs.transform(X_train)

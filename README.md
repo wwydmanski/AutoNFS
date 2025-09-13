@@ -18,7 +18,7 @@ breast = load_breast_cancer()
 X = breast.data
 y = breast.target
 
-gfs = GFSNetwoAutoNFSrk()
+gfs = AutoNFS()
 X = gfs.fit_transform(X, y)
 
 print(gfs.support_)

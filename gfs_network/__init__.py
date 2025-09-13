@@ -1,1 +1,0 @@
-from .sklearn_interface import GFSNetwork

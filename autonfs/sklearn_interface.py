@@ -3,7 +3,7 @@ import torch
 from typing import Literal
 
 
-class GFSNetwork:
+class AutoNFS:
     def __init__(
         self,
         batch_size=1,

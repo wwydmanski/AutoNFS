@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "gfs_network"
-version = "0.3.0"
+name = "autonfs"
+version = "0.3.1"
 description = "An end-to-end feature selection distribution with linear runtime(number of features) complexity."
 authors = ["Witold Wydmański <wwydmanski@gmail.com>"]
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/wwydmanski/GFSNetwork"
+repository = "https://github.com/wwydmanski/AutoNFS"
 
 [tool.poetry.dependencies]
 python = "^3.9"

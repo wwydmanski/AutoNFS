@@ -1,25 +1,24 @@
-# GFS Network
-Code for [GFSNetwork: Differentiable Feature Selection via Gumbel-Sigmoid Relaxation](https://arxiv.org/abs/2503.13304).
+# AutoNFS
 
-Gumbel Feature Selection Network is a deep learning model that can be used to select the most important features from a given dataset. The model is based on the Gumbel-Sigmoid distribution.
+AutoNFS is a deep learning model that can be used to select the most important features from a given dataset. The model is based on the Gumbel-Sigmoid distribution.
 
 ## Installation
 To install the package, you can use pip:
 ```bash
-pip install gfs_network
+pip install autonfs
 ```
 
 ## Usage examples
 ### Basic usage
 ```python
-from gfs_network import GFSNetwork
+from autonfs import AutoNFS
 from sklearn.datasets import load_breast_cancer
 
 breast = load_breast_cancer()
 X = breast.data
 y = breast.target
 
-gfs = GFSNetwork()
+gfs = GFSNetwoAutoNFSrk()
 X = gfs.fit_transform(X, y)
 
 print(gfs.support_)
@@ -28,7 +27,7 @@ print(gfs.scores_)
 
 ### Performance verification
 ```python
-from gfs_network import GFSNetwork
+from autonfs import AutoNFS
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -48,7 +47,7 @@ orig_score = balanced_accuracy_score(y_test, clf.predict(X_test))
 print(f"Original score: {orig_score:.3f}. Original features: {X.shape[1]}")
 # Original score: 0.958. Original features: 30
 
-gfs = GFSNetwork(verbose=True, device=DEVICE)
+gfs = AutoNFS(verbose=True, device=DEVICE)
 gfs.fit(X_train, y_train)
 
 X_transformed = gfs.transform(X_train)

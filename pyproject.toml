@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "autonfs"
-version = "0.3.1"
+version = "0.3.2"
 description = "An end-to-end feature selection distribution with linear runtime(number of features) complexity."
 authors = ["Witold Wydmański <wwydmanski@gmail.com>"]
 readme = "README.md"

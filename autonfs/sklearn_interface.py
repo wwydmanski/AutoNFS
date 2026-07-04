@@ -6,10 +6,10 @@ from typing import Literal
 class AutoNFS:
     def __init__(
         self,
-        batch_size=1,
+        batch_size=32,
         temperature_decay: float = 0.997,
-        epochs: int = 200,
-        balance: float = 1.0,
+        epochs: int = 150,
+        balance: float = 0.03,
         device: str = "cpu",
         verbose: bool = False,
         mode: Literal["classification", "regression"] = "classification",
@@ -17,10 +17,10 @@ class AutoNFS:
         """Perform feature selection using GFSNetwork.
 
         Args:
-            batch_size (int, optional): Batch size. Larger batch size speeds up training, but makes feature selection less aggresive. Defaults to 1.
+            batch_size (int, optional): Batch size. Larger batch size speeds up training, but makes feature selection less aggresive. Defaults to 32 (batch_size=1 was found to cause severe GPU/CPU slowdowns with no feature-selection benefit over 32/64; see HPO study).
             temperature_decay (float, optional): Temperature decay. Defaults to 0.997.
-            epochs (int, optional): Number of epochs. Defaults to 200.
-            balance (float, optional): Balance between classification and feature selection. Larger value puts more weight on feature selection. Defaults to 1.0.
+            epochs (int, optional): Number of epochs. Defaults to 150 (150-300 are statistically equivalent; 150 is fastest).
+            balance (float, optional): Balance between classification and feature selection. Larger value puts more weight on feature selection. Defaults to 0.03 (WARNING: the previous default of 1.0 was found to cause complete feature-mask collapse -- zero features selected -- in the majority of seeds across most benchmark datasets; see HPO study).
             device (str, optional): Device to use. Defaults to "cpu".
             verbose (bool, optional): Verbosity. Defaults to False.
         """

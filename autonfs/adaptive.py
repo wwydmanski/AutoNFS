@@ -40,11 +40,11 @@ def _baseline_score(X_train, y_train, X_val, y_val, mode):
     from sklearn.metrics import balanced_accuracy_score, r2_score
 
     if mode == "classification":
-        clf = RandomForestClassifier(random_state=0, n_estimators=200)
+        clf = RandomForestClassifier(random_state=0, n_estimators=200, n_jobs=-1)
         clf.fit(X_train, y_train)
         return balanced_accuracy_score(y_val, clf.predict(X_val))
     else:
-        clf = RandomForestRegressor(random_state=0, n_estimators=200)
+        clf = RandomForestRegressor(random_state=0, n_estimators=200, n_jobs=-1)
         clf.fit(X_train, y_train)
         return r2_score(y_val, clf.predict(X_val))
 
@@ -57,11 +57,11 @@ def _downstream_score(X_train, y_train, X_val, y_val, support, mode):
         return float("nan")
     Xtr_sel, Xval_sel = X_train[:, support], X_val[:, support]
     if mode == "classification":
-        clf = RandomForestClassifier(random_state=0, n_estimators=200)
+        clf = RandomForestClassifier(random_state=0, n_estimators=200, n_jobs=-1)
         clf.fit(Xtr_sel, y_train)
         return balanced_accuracy_score(y_val, clf.predict(Xval_sel))
     else:
-        clf = RandomForestRegressor(random_state=0, n_estimators=200)
+        clf = RandomForestRegressor(random_state=0, n_estimators=200, n_jobs=-1)
         clf.fit(Xtr_sel, y_train)
         return r2_score(y_val, clf.predict(Xval_sel))
 
@@ -92,25 +92,43 @@ def adaptive_balance_search(
     point with the best median score among non-collapsed points, or the
     smallest grid value if every point collapsed.
     """
-    from .sklearn_interface import AutoNFS
+    import torch
+    from .ensemble import train_gumbel_ensemble
 
     if baseline_score is None:
         baseline_score = _baseline_score(X_train, y_train, X_val, y_val, mode)
+
+    # Prepare tensors once, exactly as AutoNFS.fit(scale=True) would per run.
+    X_t = torch.as_tensor(X_train)
+    y_t = torch.as_tensor(y_train)
+    if mode == "classification":
+        y_t = torch.nn.functional.one_hot(y_t.to(int))
+    else:
+        y_t = y_t.view(-1, 1).to(torch.float32)
+    X_t = (X_t - X_t.mean(0)) / (X_t.std(0) + 1e-6)
 
     trajectory = []
     chosen, reason = None, None
 
     for balance in grid:
         n_selected_all, scores_all = [], []
+        # One vectorized training of n_seeds stacked networks; equivalent to
+        # n_seeds sequential AutoNFS fits (see ensemble.py) but ~n_seeds x faster.
+        votes = train_gumbel_ensemble(
+            X_t, y_t, n_members=n_seeds,
+            batch_size=batch_size, epochs=epochs, fs_balance=balance,
+            temperature_decay=temperature_decay, device=device, mode=mode,
+        )
+        # The scoring forest is deterministic (random_state=0), so seeds that
+        # picked the same support get the same score -- compute it once.
+        score_cache = {}
         for seed in range(n_seeds):
-            model = AutoNFS(
-                batch_size=batch_size, epochs=epochs, balance=balance,
-                temperature_decay=temperature_decay, device=device, mode=mode,
-            )
-            model.fit(X_train, y_train)
-            support = model.support_
+            support = votes[seed] > 0
             n_selected_all.append(int(support.sum()))
-            scores_all.append(_downstream_score(X_train, y_train, X_val, y_val, support, mode))
+            key = support.tobytes()
+            if key not in score_cache:
+                score_cache[key] = _downstream_score(X_train, y_train, X_val, y_val, support, mode)
+            scores_all.append(score_cache[key])
 
         median_n = float(np.median(n_selected_all))
         scores_for_median = [0.0 if np.isnan(s) else s for s in scores_all]

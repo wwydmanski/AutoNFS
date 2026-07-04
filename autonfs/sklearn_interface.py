@@ -10,7 +10,7 @@ class AutoNFS:
         batch_size=32,
         temperature_decay: float = 0.997,
         epochs: int = 150,
-        balance: Union[float, Literal["auto"]] = 1.0,
+        balance: Union[float, Literal["auto"]] = "auto",
         device: str = "cpu",
         verbose: bool = False,
         mode: Literal["classification", "regression"] = "classification",

@@ -5,7 +5,7 @@ AutoNFS is a deep learning model that can be used to select the most important f
 ## Adaptive `balance`
 
 `balance` trades feature-selection aggressiveness against risk of mask collapse. Default is
-`1.0` (max aggressiveness). Pass `balance="auto"` to back off automatically per-dataset if
+`auto` (adaptive). Pass `balance="auto"` to back off automatically per-dataset if
 `1.0` collapses or underperforms; see `autonfs/adaptive.py` and the HPO study report/addendum.
 
 ## Installation

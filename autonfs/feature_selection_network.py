@@ -9,9 +9,7 @@ def gumbel_sigmoid(logits, tau: float = 1, hard: bool = False, threshold: float 
     y_soft = gumbels.sigmoid()
 
     if hard:
-        indices = (y_soft > threshold).nonzero(as_tuple=True)
-        y_hard = torch.zeros_like(logits)
-        y_hard[indices[0], indices[1]] = 1.0
+        y_hard = (y_soft > threshold).to(y_soft.dtype)
         ret = y_hard - y_soft.detach() + y_soft
     else:
         ret = y_soft

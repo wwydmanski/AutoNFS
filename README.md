@@ -8,6 +8,28 @@ AutoNFS is a deep learning model that can be used to select the most important f
 `auto` (adaptive). Pass `balance="auto"` to back off automatically per-dataset if
 `1.0` collapses or underperforms; see `autonfs/adaptive.py` and the HPO study report/addendum.
 
+## Benchmark: AutoNFS vs. standard feature-selection methods
+
+Benchmarked against 6 standard methods (mutual information, ANOVA F-test, L1-embedded, Random
+Forest importance, mRMR, Boruta) on **38 real-world datasets** (5–10,000 features, 5 seeds each),
+with every method given the same feature budget `k` that AutoNFS itself selected on that run — so
+differences reflect selection quality, not different compression.
+
+![AutoNFS rank distribution vs. 6 standard FS methods](docs/rank_distribution.png)
+
+Each column is a method; dots are its per-dataset median rank (1 = best of 7) across 37 datasets
+(`Ailerons` excluded — AutoNFS's mask collapsed there); the black diamond is the mean rank.
+
+**AutoNFS has the best mean rank overall (2.64 of 7)**, ahead of RF importance (3.17) and
+budget-matched Boruta (3.66), and is the single best method on 15/37 datasets — more than double
+any competitor. The edge holds regardless of dataset size; see `AutoNFS_HPO_report_addendum.md`
+(§7) for the full breakdown, including a timing benchmark where AutoNFS's selection cost stays
+flat with feature count while RFE/mutual-information scale by 2–3 orders of magnitude.
+
+Note: Boruta run to its own (unconstrained) convergence picks ~3x more features than AutoNFS and
+wins 78% of seeds in that setting — but that's not a fair budget comparison, hence why it's
+capped to the same `k` above.
+
 ## Installation
 To install the package, you can use pip:
 ```bash

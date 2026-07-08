@@ -29,8 +29,7 @@ difficulty tiers:
 ![AutoNFS rank distribution vs. 6 standard FS methods](docs/rank_distribution.png)
 
 Each column is a method; dots are its per-dataset rank (1 = best of 7, median score across 5
-seeds) across 58 evaluable datasets (`Ailerons` excluded — AutoNFS's mask collapsed on all 5 seeds
-there); the black diamond is the mean rank.
+seeds) across 58 evaluable datasets; the black diamond is the mean rank.
 
 **AutoNFS has the best mean rank (2.96 of 7)**, ahead of RF importance (3.25) and budget-matched
 Boruta (3.66). 

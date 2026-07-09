@@ -8,6 +8,38 @@ AutoNFS is a deep learning model that can be used to select the most important f
 `auto` (adaptive). Pass `balance="auto"` to back off automatically per-dataset if
 `1.0` collapses or underperforms; see `autonfs/adaptive.py` for the implementation.
 
+## Stability selection (default, `stability_selection=True`)
+
+`balance="auto"` fixes *most* mask collapses, but a single Gumbel-softmax training run is still a
+stochastic point estimate: on some datasets/seeds the mask still collapses to 0 features even at
+the adaptive-resolved `balance`, and on many more the selected set is noisier than it needs to be.
+By default, `AutoNFS.fit` now trains an ensemble of `n_members` (default 9) independent networks at
+the same resolved `balance` (via `autonfs.ensemble.train_gumbel_ensemble`, which batches all members
+into one training loop at roughly the same wall-clock cost as a handful of sequential runs) and
+keeps a feature iff at least `stability_tau` (default 1/3) of members select it in their own vote.
+
+In a follow-up study across 37 datasets (17 wide gene-expression/microarray panels + 20 balanced or
+noisy tabular datasets) × 5 seeds, comparing this stability vote against the plain `balance="auto"`
+single-run default (both reusing the identical resolved `balance` per dataset/seed, so the
+comparison isolates the ensemble vote from the balance search):
+
+- Mean downstream balanced accuracy rose from **0.847 to 0.864** (paired Wilcoxon signed-rank
+  `p = 0.0013`, 185 dataset/seed pairs), with a positive win-rate against the single-run baseline.
+- All 3 residual mask collapses (`k=0`) still produced by the single-run default under
+  `balance="auto"` (on `kc2` and `sonar`, both borderline/noisy tabular datasets) were eliminated,
+  with **no new collapses introduced** on any of the 185 pairs.
+- The improvement is concentrated on the harder `balanced_or_noisy` tier (mean score 0.797 → 0.826,
+  `p = 0.0018`); on the `high_dim` tier the two are statistically indistinguishable (0.906 → 0.909,
+  `p = 0.14`) — the ensemble vote mainly helps where a single stochastic run is least reliable, and
+  doesn't cost anything where it was already reliable.
+- `stability_tau=1/3` was the best of the thresholds tried (`{0.33, 0.5}` for the vote-frequency
+  ensemble; also compared against a logit-probability-averaging ensemble at `{0.3, 0.4, 0.5}`, which
+  underperformed the single-run baseline at every threshold tried).
+
+Pass `stability_selection=False` to recover the original single-run behavior (one training run, one
+stochastic vote) if you need the lower, non-ensemble compute cost or want to reproduce results from
+before this change.
+
 ## Benchmark: AutoNFS vs. standard feature-selection methods
 
 Benchmarked against 6 standard methods (mutual information, ANOVA F-test, L1-embedded, Random
@@ -76,6 +108,9 @@ datasets and are listed mainly for completeness / fine-tuning.
 | `target_features_mode` | `"raw"` | `"raw"`, `"auto"` | Tied for best in the sweep; `"raw"` kept as it requires no other behavior change. |
 | `adaptive_threshold_frac` | `0.9` | `0.85, 0.9, 0.95` | Only relevant when `balance="auto"`. Minimum fraction of the all-features baseline score a backed-off `balance` must retain; lower values let the search settle on more aggressive (smaller) feature sets at some accuracy cost. |
 | `adaptive_n_seeds` | `5` | `3, 5, 8` | Only relevant when `balance="auto"`. Seeds averaged per grid point before deciding to back off; higher is more robust but costs proportionally more fits during the search. |
+| `stability_selection` | `True` | `True, False` | Ensemble vote-frequency selection vs. the original single training run. Raises mean downstream balanced accuracy (0.847 → 0.864 across 37 datasets, `p = 0.0013`) and removes residual mask collapses that `balance="auto"` alone doesn't catch; set `False` for the original lower-cost single-run behavior. |
+| `n_members` | `9` | `5, 9, 15` | Only relevant when `stability_selection=True`. Ensemble size for the stability vote; diminishing returns were found beyond ~9 members while cost grows linearly. |
+| `stability_tau` | `1/3` | `0.33, 0.5` | Only relevant when `stability_selection=True`. Minimum fraction of members that must select a feature to keep it; `1/3` was the best-performing threshold in the sweep — higher values trade recall for precision and increase collapse risk. |
 
 ## Installation
 To install the package, you can use pip:

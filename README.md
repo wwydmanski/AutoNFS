@@ -40,6 +40,20 @@ Pass `stability_selection=False` to recover the original single-run behavior (on
 stochastic vote) if you need the lower, non-ensemble compute cost or want to reproduce results from
 before this change.
 
+**Known caveat.** On 2 of the 38 datasets in the validation cohort (`MagicTelescope`, `sonar`), the
+*upstream* `balance="auto"` backoff search itself — not the stability vote — occasionally resolves to
+a different `balance` across outer CV seeds, because the search's accept/reject decision sits right at
+its `adaptive_threshold_frac` boundary and is sensitive to the internal seeds' sampling noise on these
+two datasets. This produces higher seed-to-seed variance in the selected feature count on exactly
+these two datasets than on the rest of the cohort. We tried two fixes — a stricter acceptance floor on
+`median_n_selected` and a coefficient-of-variation guard on the internal seeds, plus simply raising
+`adaptive_n_seeds` from 5 to 9 — none generalized: each helped one of the two datasets while doing
+nothing or making the other worse, so none is adopted as a new default. This is a preexisting property
+of `balance="auto"`'s search (present with `stability_selection=False` too, just partially masked by
+looking at only one run), not a regression introduced by stability selection; both eliminated all
+whole-mask collapses previously seen on `sonar`, so the raw failure mode this feature targets is fixed
+even on these two datasets.
+
 ## Benchmark: AutoNFS vs. standard feature-selection methods
 
 Benchmarked against 6 standard methods (mutual information, ANOVA F-test, L1-embedded, Random

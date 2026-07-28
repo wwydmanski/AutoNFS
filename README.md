@@ -1,6 +1,10 @@
 # AutoNFS
 
-AutoNFS is a deep learning model that can be used to select the most important features from a given dataset. The model is based on the Gumbel-Sigmoid distribution.
+AutoNFS is a global neural feature selector that jointly learns which features to retain and how
+many to select. A learned embedding projection generates feature-level logits, while annealed
+Gumbel-Sigmoid gates optimize a compact dataset-level mask together with a task predictor.
+
+![AutoNFS architecture](docs/architecture.png)
 
 ## Adaptive `balance`
 
@@ -54,59 +58,147 @@ looking at only one run), not a regression introduced by stability selection; bo
 whole-mask collapses previously seen on `sonar`, so the raw failure mode this feature targets is fixed
 even on these two datasets.
 
-## Benchmark: AutoNFS vs. standard feature-selection methods
+## Matched-cardinality benchmark
 
-Benchmarked against 6 standard methods (mutual information, ANOVA F-test, L1-embedded, Random
-Forest importance, mRMR, Boruta) on **59 real-world datasets** (5–16,063 features, 5 seeds each),
-with every method given the same feature budget `k` that AutoNFS itself selected on that run — so
-differences reflect selection quality, not different compression. Per-dataset scores are the
-**median over 5 seeds** (not a cherry-picked best seed) before ranking. The suite spans three
-difficulty tiers:
+The paper benchmark evaluates AutoNFS against eight feature selectors on **58 balanced, noisy,
+and high-dimensional datasets**, with five seeds per dataset. Every comparator receives the exact
+feature count selected by AutoNFS on the corresponding run. This controls compression and tests
+which method identifies the more predictive subset at the same cardinality. Scores are aggregated
+as the median over seeds before ranking each dataset.
 
-- **`balanced`** (38 datasets, 37 evaluable) — the initial validation set: small/medium tabular
-  problems (5–10,000 features) from OpenML and scikit-learn, plus two synthetic high-dimensional
-  cases.
-- **`high_dim`** (14 datasets) — very wide, small-`n` gene-expression and microarray problems
-  (`GCM`, `11_Tumors`, the `AP_*`/`OVA_*` cancer panels, `leukemia`, `DLBCL`, `SRBCT`,
-  `colon_cancer`), 970–16,063 features against 62–1,545 samples.
-- **`noisy`** (7 datasets) — high label-noise or many-class problems (`plants_margin/shape/texture`
-  at 100 classes, `hill_valley`, `musk`, `waveform_5000`, `gas_drift_diffconc`).
+The benchmark uses the paper's fixed research configuration: one AutoNFS run with 150 epochs,
+batch size 32, `temperature_decay=0.997`, and `balance=1.0`. It intentionally does not use the
+adaptive balance search or stability ensemble enabled by the package defaults.
 
-![AutoNFS rank distribution vs. 6 standard FS methods](docs/rank_distribution.png)
+<details>
+<summary>Per-dataset statistics for the 58 benchmark datasets (click to expand)</summary>
 
-Each column is a method; dots are its per-dataset rank (1 = best of 7, median score across 5
-seeds) across 58 evaluable datasets (`Ailerons` excluded — AutoNFS's mask collapsed on all 5 seeds
-there); the black diamond is the mean rank.
+| Dataset | Tier | Task | n samples (orig.) | n samples (used) | n features | n classes | Source |
+|---|---|---|---|---|---|---|---|
+| `Bioresponse` | balanced | classification | 2,000 | 2,000 | 1,776 | 2 | OpenML |
+| `Fashion-MNIST` | balanced | classification | 70,000 | 6,000 * | 784 | 10 | OpenML |
+| `MagicTelescope` | balanced | classification | 19,020 | 6,000 * | 10 | 2 | OpenML |
+| `adult` | balanced | classification | 48,842 | 6,000 * | 105 | 2 | OpenML |
+| `arcene` | balanced | classification | 200 | 200 | 10,000 | 2 | OpenML |
+| `bank-marketing` | balanced | classification | 45,211 | 6,000 * | 51 | 2 | OpenML |
+| `breast_cancer` | balanced | classification | 569 | 569 | 30 | 2 | sklearn |
+| `california_housing` | balanced | regression | 20,640 | 6,000 * | 13 | regression | OpenML |
+| `cnae-9` | balanced | classification | 1,080 | 1,080 | 856 | 9 | OpenML |
+| `covertype` | balanced | classification | 110,393 | 6,000 * | 54 | 7 | OpenML |
+| `cpu_act` | balanced | regression | 8,192 | 6,000 * | 21 | regression | OpenML |
+| `diabetes` | balanced | regression | 442 | 442 | 10 | regression | sklearn |
+| `digits` | balanced | classification | 1,797 | 1,797 | 64 | 10 | sklearn |
+| `eeg-eye-state` | balanced | classification | 14,980 | 6,000 * | 14 | 2 | OpenML |
+| `electricity` | balanced | classification | 45,312 | 6,000 * | 8 | 2 | OpenML |
+| `elevators` | balanced | regression | 16,599 | 6,000 * | 18 | regression | OpenML |
+| `gas-drift` | balanced | classification | 13,910 | 6,000 * | 128 | 6 | OpenML |
+| `gisette` | balanced | classification | 2,000 | 2,000 | 5,000 | 2 | OpenML |
+| `har` | balanced | classification | 10,299 | 6,000 * | 561 | 6 | OpenML |
+| `house_16H` | balanced | regression | 22,784 | 6,000 * | 16 | regression | OpenML |
+| `ionosphere` | balanced | classification | 351 | 351 | 34 | 2 | OpenML |
+| `isolet` | balanced | classification | 7,797 | 6,000 * | 617 | 26 | OpenML |
+| `madelon` | balanced | classification | 2,600 | 2,600 | 500 | 2 | OpenML |
+| `mfeat-pixel` | balanced | classification | 2,000 | 2,000 | 240 | 10 | OpenML |
+| `mnist_784` | balanced | classification | 70,000 | 6,000 * | 784 | 10 | OpenML |
+| `nomao` | balanced | classification | 34,465 | 6,000 * | 118 | 2 | OpenML |
+| `ozone-level-8hr` | balanced | classification | 2,534 | 2,534 | 72 | 2 | OpenML |
+| `phoneme` | balanced | classification | 5,404 | 5,404 | 5 | 2 | OpenML |
+| `pol` | balanced | regression | 15,000 | 6,000 * | 48 | regression | OpenML |
+| `semeion` | balanced | classification | 1,593 | 1,593 | 256 | 10 | OpenML |
+| `sonar` | balanced | classification | 208 | 208 | 60 | 2 | OpenML |
+| `spambase` | balanced | classification | 4,601 | 4,601 | 57 | 2 | OpenML |
+| `splice` | balanced | classification | 3,190 | 3,190 | 287 | 3 | OpenML |
+| `superconduct` | balanced | regression | 21,263 | 6,000 * | 81 | regression | OpenML |
+| `synth_clf_highdim` | balanced | classification | 400 | 400 | 500 | 2 | synthetic |
+| `synth_reg_highdim` | balanced | regression | 400 | 400 | 200 | regression | synthetic |
+| `wine` | balanced | classification | 178 | 178 | 13 | 3 | sklearn |
+| `gas_drift_diffconc` | noisy | classification | 13,910 | 6,000 * | 129 | 6 | OpenML |
+| `hill_valley` | noisy | classification | 1,212 | 1,212 | 100 | 2 | OpenML |
+| `musk` | noisy | classification | 6,598 | 6,000 * | 268 | 2 | OpenML |
+| `plants_margin` | noisy | classification | 1,600 | 1,600 | 64 | 100 | OpenML |
+| `plants_shape` | noisy | classification | 1,600 | 1,600 | 64 | 100 | OpenML |
+| `plants_texture` | noisy | classification | 1,599 | 1,599 | 64 | 100 | OpenML |
+| `waveform_5000` | noisy | classification | 5,000 | 5,000 | 40 | 3 | OpenML |
+| `11_Tumors` | high_dim | classification | 174 | 174 | 12,533 | 11 | OpenML |
+| `AP_Breast_Kidney` | high_dim | classification | 604 | 604 | 10,935 | 2 | OpenML |
+| `AP_Colon_Kidney` | high_dim | classification | 546 | 546 | 10,935 | 2 | OpenML |
+| `AP_Endometrium_Breast` | high_dim | classification | 405 | 405 | 10,935 | 2 | OpenML |
+| `DLBCL` | high_dim | classification | 77 | 77 | 5,469 | 2 | OpenML |
+| `GCM` | high_dim | classification | 190 | 190 | 16,063 | 14 | OpenML |
+| `OVA_Breast` | high_dim | classification | 1,545 | 1,545 | 10,935 | 2 | OpenML |
+| `OVA_Kidney` | high_dim | classification | 1,545 | 1,545 | 10,935 | 2 | OpenML |
+| `OVA_Lung` | high_dim | classification | 1,545 | 1,545 | 10,935 | 2 | OpenML |
+| `SRBCT` | high_dim | classification | 83 | 83 | 2,308 | 4 | OpenML |
+| `colon_cancer` | high_dim | classification | 62 | 62 | 2,000 | 2 | OpenML |
+| `gina_agnostic` | high_dim | classification | 3,468 | 3,468 | 970 | 2 | OpenML |
+| `leukemia` | high_dim | classification | 72 | 72 | 7,129 | 2 | OpenML |
+| `micro_mass` | high_dim | classification | 360 | 360 | 1,300 | 10 | OpenML |
 
-**AutoNFS has the best mean rank (2.96 of 7)**, ahead of RF importance (3.25) and budget-matched
-Boruta (3.66). 
-A tier breakdown confirms the lead is broad-based rather than driven by one tier:
+Full machine-readable version: [`docs/dataset_statistics.csv`](docs/dataset_statistics.csv).
 
-![Rank distribution by difficulty tier](docs/rank_distribution_by_tier.png)
+</details>
 
-- On **balanced** (n=37) datasets, AutoNFS wins clearly (mean rank 2.72 of 7), ahead of RF
-  importance (3.18) and every other method.
-- On **noisy** (n=7) datasets, AutoNFS wins even more clearly (mean rank 2.07), ahead of RF
-  importance (2.64).
-- `high_dim` (n=14, very wide gene-expression panels) is a separate, harder regime where
-  budget-matched Boruta edges ahead; it's omitted above because averaging it with the other tiers
-  obscures both tiers.
+![Per-dataset ranks for nine matched-cardinality selectors](docs/rank_distribution.png)
 
-![AutoNFS feature reduction across the suite](docs/feature_reduction.png)
+| Method | Mean rank | Holm-adjusted p vs. AutoNFS |
+|---|---:|---:|
+| **AutoNFS** | **3.54** | — |
+| RF importance | 4.11 | .072 |
+| LassoNet | 4.56 | **.025** |
+| Boruta (matched) | 4.59 | **.046** |
+| L1 embedded | 5.09 | **.002** |
+| mRMR | 5.34 | **.002** |
+| STG | 5.55 | **<.001** |
+| ANOVA | 6.09 | **<.001** |
+| Mutual information | 6.14 | **<.001** |
 
-Per-dataset feature reduction (1 − selected / original features, median over 5 seeds), AutoNFS vs.
-unconstrained Boruta, split by tier. AutoNFS reduces more aggressively and more consistently in
-every tier — most clearly on `noisy`, where unconstrained Boruta barely prunes anything, and least
-on `high_dim`, where both methods cut hard but Boruta's unconstrained search occasionally goes
-further.
+AutoNFS obtains the best aggregate rank and the best rank on 17 of 58 datasets. After Holm
+correction over all eight comparisons, it significantly outperforms seven alternatives. Against
+LassoNet it wins/ties/loses on 36/6/16 datasets; against STG the corresponding counts are 43/3/12.
+RF importance is the closest comparator and is not significantly different after correction
+(`p=.072`).
 
-AutoNFS's median feature reduction across the suite is **88.9%**, compared with 54.2% for Boruta
-run to its own unconstrained convergence (41.0% on `balanced`, 4.7% on `noisy`, where unconstrained
-Boruta struggles to converge, and 96.3% on `high_dim`). That unconstrained Boruta baseline does
-still outscore AutoNFS on raw accuracy in 67.8% of dataset/seed pairs — but it keeps roughly twice
-as many features to do it, so it isn't a fair budget comparison; the matched-budget
-`boruta_matched` variant above (same feature count as AutoNFS) is the correct comparator, and
-there AutoNFS is ahead (mean rank 2.96 vs. 3.66).
+Unconstrained Boruta is a separate reference operating point rather than a peer in this ranking.
+It retains a median 47.2% of features, compared with 11.3% for AutoNFS, so its raw accuracy reflects
+a different accuracy-compression trade-off.
+
+## Corruption benchmark
+
+Following the performance-driven feature-selection benchmark, 11 OpenML datasets are augmented
+with independent random variables, Gaussian-corrupted copies, or pairwise products. AutoNFS
+discovers its own cardinality, while competing selectors receive the original uncorrupted feature
+count.
+
+![Mean ranks under three feature-corruption mechanisms](docs/corruption_rank_comparison.png)
+
+AutoNFS has the best mean rank in all three settings: **3.3** for random variables, **2.3** for
+Gaussian-corrupted copies, and **4.4** for pairwise products. Its selected subsets contain no
+introduced variables on average in the random and Gaussian-copy settings. The mean introduced
+fraction is 0.17 for pairwise products, which can themselves encode predictive interactions.
+
+## Sensitivity to `balance`
+
+![Accuracy and retained-cardinality sensitivity](docs/balance_sensitivity.png)
+
+Across 12 balanced, high-dimensional, and noisy datasets with five seeds, predictive performance
+is stable over a broad region of the accuracy-sparsity trade-off. For `balance` values from 0.03 to
+1, the median absolute accuracy difference from the all-features baseline is 0.010. At the common
+paper setting `balance=1`, the retained fraction ranges from 1.1% on `gisette` to 34.0% on
+`waveform_5000`, confirming that `balance` is not a hidden target feature count.
+
+## Cross-model mask transfer
+
+AutoNFS learns masks jointly with an MLP, but the selected columns can be reused by independent
+predictors. Across 18 Curated Metagenomics Data cohorts, it removes **92%** of microbial features
+on average. Mean MLP accuracy changes from 62.17% to 63.72%, while mean random-forest accuracy
+changes from 73.57% to 75.63%. These are single recorded runs per cohort and should be interpreted
+as evidence of compression and possible transfer rather than uncertainty-controlled improvement.
+
+On MNIST and Fashion-MNIST, a separately initialized Vision Transformer is trained from scratch on
+the selected pixels. AutoNFS retains 24.4% and 17.4% of pixels respectively, while preserving
+99.57% and 98.27% of the corresponding full-image ViT mean accuracy.
+
+![Pixel-selection frequencies across five runs](docs/vit_mask_transfer.png)
 
 ## Key hyperparameters
 

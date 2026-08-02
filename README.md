@@ -214,6 +214,9 @@ datasets and are listed mainly for completeness / fine-tuning.
 | `target_features_mode` | `"raw"` | `"raw"`, `"auto"` | Tied for best in the sweep; `"raw"` kept as it requires no other behavior change. |
 | `adaptive_threshold_frac` | `0.9` | `0.85, 0.9, 0.95` | Only relevant when `balance="auto"`. Minimum fraction of the all-features baseline score a backed-off `balance` must retain; lower values let the search settle on more aggressive (smaller) feature sets at some accuracy cost. |
 | `adaptive_n_seeds` | `5` | `3, 5, 8` | Only relevant when `balance="auto"`. Seeds averaged per grid point before deciding to back off; higher is more robust but costs proportionally more fits during the search. |
+| `stability_selection` | `True` | `True, False` | Ensemble vote-frequency selection vs. the original single training run. Raises mean downstream balanced accuracy (0.847 → 0.864 across 37 datasets, `p = 0.0013`) and removes residual mask collapses that `balance="auto"` alone doesn't catch; set `False` for the original lower-cost single-run behavior. |
+| `n_members` | `9` | `5, 9, 15` | Only relevant when `stability_selection=True`. Ensemble size for the stability vote; diminishing returns were found beyond ~9 members while cost grows linearly. |
+| `stability_tau` | `1/3` | `0.33, 0.5` | Only relevant when `stability_selection=True`. Minimum fraction of members that must select a feature to keep it; `1/3` was the best-performing threshold in the sweep — higher values trade recall for precision and increase collapse risk. |
 
 ## Installation
 To install the package, you can use pip:
